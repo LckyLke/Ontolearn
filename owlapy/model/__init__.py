@@ -3074,6 +3074,42 @@ class OWLOntology(OWLObject, metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def class_assertion_axioms(self, ind: OWLNamedIndividual) -> Iterable[OWLClassAssertionAxiom]:
+        """Gets the OWLClassAssertionAxiom objects that assign the given individual to a class expression.
+
+        Args:
+            ind: The individual which is assigned to class expressions by the retrieved axioms.
+
+        Returns:
+            the axioms matching the search.
+        """
+        pass
+
+    @abstractmethod
+    def object_property_assertion_axioms(self, ind: OWLNamedIndividual) -> Iterable[OWLObjectPropertyAssertionAxiom]:
+        """Gets the OWLObjectPropertyAssertionAxiom objects which have the given individual as subject.
+
+        Args:
+            ind: The individual which is the subject of the retrieved axioms.
+
+        Returns:
+            the axioms matching the search.
+        """
+        pass
+
+    @abstractmethod
+    def data_property_assertion_axioms(self, ind: OWLNamedIndividual) -> Iterable[OWLDataPropertyAssertionAxiom]:
+        """Gets the OWLDataPropertyAssertionAxiom objects which have the given individual as subject.
+
+        Args:
+            ind: The individual which is the subject of the retrieved axioms.
+
+        Returns:
+            the axioms matching the search.
+        """
+        pass
+
+    @abstractmethod
     def data_property_domain_axioms(self, property: OWLDataProperty) -> Iterable[OWLDataPropertyDomainAxiom]:
         """Gets the OWLDataPropertyDomainAxiom objects where the property is equal to the specified property.
 

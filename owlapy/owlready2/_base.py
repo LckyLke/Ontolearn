@@ -16,7 +16,8 @@ from owlapy.model import OWLObjectPropertyRangeAxiom, OWLOntologyManager, OWLDat
     OWLNamedIndividual, OWLClassExpression, OWLObjectPropertyExpression, OWLOntologyID, OWLAxiom, OWLOntology, \
     OWLOntologyChange, AddImport, OWLThing, DoubleOWLDatatype, OWLObjectPropertyDomainAxiom, OWLLiteral, \
     OWLObjectInverseOf, BooleanOWLDatatype, IntegerOWLDatatype, DateOWLDatatype, DateTimeOWLDatatype, OWLClass, \
-    DurationOWLDatatype, StringOWLDatatype, IRI, OWLDataPropertyRangeAxiom, OWLDataPropertyDomainAxiom
+    DurationOWLDatatype, StringOWLDatatype, IRI, OWLDataPropertyRangeAxiom, OWLDataPropertyDomainAxiom, \
+    OWLClassAssertionAxiom, OWLDataPropertyAssertionAxiom, OWLObjectPropertyAssertionAxiom
 from owlapy.owlready2.utils import FromOwlready2
 
 logger = logging.getLogger(__name__)
@@ -149,6 +150,27 @@ class OWLOntology_Owlready2(OWLOntology):
         return OWLOntologyID(IRI.create(onto_iri) if onto_iri is not None else None,
                              IRI.create(version_iri) if version_iri is not None else None)
 
+    def class_assertion_axioms(self, ind: OWLNamedIndividual) -> Iterable[OWLClassAssertionAxiom]:
+        i_x: owlready2.Thing = self._world[ind.get_iri().as_str()]
+        yield from (OWLClassAssertionAxiom(ind, _parse_concept_to_owlapy(c_x)) for c_x in i_x.is_a
+                    if isinstance(c_x, (owlready2.ThingClass, owlready2.ClassConstruct,)))
+
+    def object_property_assertion_axioms(self, ind: OWLNamedIndividual) -> Iterable[OWLObjectPropertyAssertionAxiom]:
+        i_x: owlready2.Thing = self._world[ind.get_iri().as_str()]
+        for p_x in i_x.get_properties():
+            if isinstance(p_x, owlready2.ObjectPropertyClass):
+                p = OWLObjectProperty(IRI.create(p_x.iri))
+                for o_x in p_x._get_values_for_individual(i_x):
+                    yield OWLObjectPropertyAssertionAxiom(ind, p, OWLNamedIndividual(IRI.create(o_x.iri)))
+
+    def data_property_assertion_axioms(self, ind: OWLNamedIndividual) -> Iterable[OWLDataPropertyAssertionAxiom]:
+        i_x: owlready2.Thing = self._world[ind.get_iri().as_str()]
+        for p_x in i_x.get_properties():
+            if isinstance(p_x, owlready2.DataPropertyClass):
+                p = OWLDataProperty(IRI.create(p_x.iri))
+                for o_x in p_x._get_values_for_individual(i_x):
+                    yield OWLDataPropertyAssertionAxiom(ind, p, OWLLiteral(o_x))
+
     def data_property_domain_axioms(self, pe: OWLDataProperty) -> Iterable[OWLDataPropertyDomainAxiom]:
         p_x: owlready2.DataPropertyClass = self._world[pe.get_iri().as_str()]
         domains = set(p_x.domains_indirect())
@@ -156,7 +178,7 @@ class OWLOntology_Owlready2(OWLOntology):
             yield OWLDataPropertyDomainAxiom(pe, OWLThing)
         else:
             for dom in domains:
-                if isinstance(dom, owlready2.ThingClass) or isinstance(dom, owlready2.ClassConstruct):
+                if isinstance(dom, (owlready2.ThingClass, owlready2.ClassConstruct,)):
                     yield OWLDataPropertyDomainAxiom(pe, _parse_concept_to_owlapy(dom))
                 else:
                     logger.warning("Construct %s not implemented at %s", dom, pe)

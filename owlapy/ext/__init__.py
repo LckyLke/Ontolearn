@@ -74,7 +74,7 @@ class OWLReasonerEx(OWLReasoner, metaclass=ABCMeta):
             ind: The named individual whose object properties are to be retrieved
 
         Returns:
-            All data properties pe where the set of reasoner axioms entails ObjectPropertyAssertion(pe ind ind2)
+            All object properties pe where the set of reasoner axioms entails ObjectPropertyAssertion(pe ind ind2)
             for atleast one ind2.
         """
         onto = self.get_root_ontology()
